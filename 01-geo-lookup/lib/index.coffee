@@ -21,6 +21,7 @@ exports.load = ->
     # GEO_FIELD_MIN, GEO_FIELD_MAX, GEO_FIELD_COUNTRY
     gindex.push [+line[0], +line[1], line[3]]
 
+  gindex.sort (a, b) -> return a[GEO_FIELD_MIN] - b[GEO_FIELD_MIN]
 
 normalize = (row) -> country: row[GEO_FIELD_COUNTRY]
 
@@ -30,8 +31,20 @@ exports.lookup = (ip) ->
 
   find = this.ip2long ip
 
-  for line, i in gindex
-   if find >= line[GEO_FIELD_MIN] and find <= line[GEO_FIELD_MAX]
-    return normalize line
+  minIndex = 0
+  maxIndex = gindex.length - 1
+  curIndex = 0
+
+
+  while minIndex <= maxIndex
+    curIndex = Math.floor( (minIndex + maxIndex) / 2 )
+    line = gindex[curIndex]
+
+    if find < line[GEO_FIELD_MIN]
+      maxIndex = curIndex - 1
+    else if find > line[GEO_FIELD_MAX]
+      minIndex = curIndex + 1
+    else
+      return normalize line
 
   return null
